@@ -273,6 +273,7 @@ canvas {
   letter-spacing: -1px;
 }
 #title-screen p { color: #888; margin-bottom: 36px; font-size: 15px; letter-spacing: 2px; text-transform: uppercase; }
+#title-screen #best-ante { margin-bottom: 20px; letter-spacing: normal; text-transform: none; }
 #title-screen button {
   padding: 16px 48px;
   font-size: 18px;
@@ -527,6 +528,7 @@ canvas {
   <div id="title-screen">
     <h1>ROGUE POOL</h1>
     <p>A roguelike billiards game</p>
+    <p id="best-ante" hidden></p>
     <button id="btn-start">Break</button>
     <div class="title-links">
       <button id="btn-title-help" class="link-btn">How to play</button>
@@ -678,6 +680,7 @@ let shakeAmount = 0;
 let shotTimerValue = 0;
 let shotTimerInterval = null;
 const HELP_SEEN_KEY = 'roguepool.help_seen_v1';
+const BEST_ANTE_KEY = 'roguepool.best_ante_v1';
 let animFrame = 0;
 let lastTime = 0;
 let physicsAccum = 0;
@@ -912,6 +915,7 @@ function roundWin() {
 }
 
 function roundLose() {
+  updateBestAnte(game.ante);
   showMessage('FAILED!', '#ff4444');
   setTimeout(() => {
     document.getElementById('game-over-screen').classList.add('active');
@@ -2080,6 +2084,23 @@ function showScorePopup(text, color) {
   scorePopupTimer = setTimeout(() => el.classList.remove('visible'), 800);
 }
 
+function updateBestAnte(ante = 0) {
+  const el = document.getElementById('best-ante');
+  try {
+    const saved = Number(localStorage.getItem(BEST_ANTE_KEY));
+    let best = Number.isSafeInteger(saved) && saved > 0 ? saved : 0;
+    if (ante > best) {
+      localStorage.setItem(BEST_ANTE_KEY, String(ante));
+      best = ante;
+    }
+    el.textContent = best > 0 ? `Best ante: ${best}` : '';
+    el.hidden = best === 0;
+  } catch (_) {
+    el.textContent = '';
+    el.hidden = true;
+  }
+}
+
 function openHelp() {
   document.getElementById('help-overlay').classList.add('active');
 }
@@ -2148,6 +2169,7 @@ game = { state: 'title', ante: 1, round: 0, shots: 10, score: 0, credits: 0, tar
   bossMod: null, shotCount: 0, freeShot: false, shopFreeRerollUsed: false };
 initBalls();
 updateHUD();
+updateBestAnte();
 if (shouldShowHelpOnFirstLoad()) openHelp();
 requestAnimationFrame(loop);
 </script>
